@@ -1,0 +1,150 @@
+use database
+
+db.database.find()
+
+$eq
+$gt
+$gte
+$lt
+$lte
+$ne
+$in
+$nin
+
+$or
+$and
+$not
+$nor
+
+$exists
+$type
+$mod
+$regex
+$text
+$where
+
+$near
+$all
+$elemMatch
+$size
+
+$ - project all
+$meta
+$slice
+
+1. What	flights	have	availability	between	any	two	given	cities	in	a	certain	date	range.
+2. What	flights	are	overbooked	either	by	a	destination	city	or	an	arrival	city	in	a	certain	
+date	range.
+3. What	city	has	the	highest	demand	(demand	is	the	percentage	of	possible	seats	possible	in	a	city	that	are	sold)	in	a	given	date	range	or	on	a	given	day	of	week
+4. Conversely	what	city	has	the	lowest	demand.
+5. What	destination	city	has	the	most	available	inbound	seats	in	a	given	date	range.
+
+//query number 1
+/*IGNORE*/db.database.aggregate([{$lookup: {from: "originAirportCode", localField: "SWA"},{from: "destAirportCode", localField "IND"}, foreignField: "date", "$descending": -1}}])
+/*OKAY*/db.database.collection.find({originAirportCode {"$eq" : "SWA"}, {destAirportCode : {$eq: "IND"}, {$eq:{$elemMatch: {date: "1/2/34"}}})}}}
+
+//query number 2
+avail:seat-bookings{"$eq" : 2}
+db.database.aggregate([$lookup: {$or [originAirportCode, desAirportCode], {"date" : 4.18.17}}}])
+/*Ignore*/db.database.collection.find({originAirportCode: {"$eq" : "SWA"}, {"day.date": {"$eq" : 04.18.17}}})
+/*Ignore*/db.database.collection.find({destAirportCode: {"$eq": "SWA"}, {"day.date": {"$eq" : 04.18.17}}})
+{"$divide": [seats, openSeats], {$multiply: ["$seats", "$openSeats"]}}
+
+//query number 3
+db.database.collection.find([{$max : {$avg: {$group: [seats, bookingID] {$eq : open {$divide: [seats, openSeats] {$mul: [percentage, 100]}}}}}}])
+
+//query number 4
+db.database.collection.find("$min"{"$avg"{"$eq"{"date":04.18.17}, {$group: [seats, bookingID], {"$eq" : open}, {"$divide": [seats, openSeats]}.forEach(function(x)){x."$divide" = new String(x."$divide")}, {$mul: {percentage, 100]}}}}) 
+
+//query number 5
+db.database.collection.find({destAirportCode : "SWA" , {seats : {"$eq" : openSeats}, {"$divide": [seats, openSeats]}, {"$orderby", {demand : 1}}}}})
+
+
+/*
+	db.database.collection.find("$percentage"{"$avg"{"$descending": -1{flightsFlown:bookings}}}})
+	$avg{$percentage{$avg{$descending{"10"}}}}
+	$percentage{flightsflown FROM TopN}
+	$percentage{milesflown FROM TopN}
+	$percentage{flightsflown FROM TopNPercent}
+	$percentage{milesflown FROM TopNPercent}
+*/
+
+
+//Start Here
+
+Restarting:::::Restarting
+1.What	flights	have	availability	between	any	two	given	cities	in	a	certain	date	range.
+db.flights.find(
+	[
+		{
+			originAirportCode: ,
+			destAirportCode: ,
+			openSeats: ,
+			'$gte': new Timestamp(new Date(2017, 4, 18), 0),
+			'$lte': new Timestamp(new Date(2017, 4, 18), 0)
+		}
+	]
+)
+
+2. What	flights	are	overbooked	either	by	a	destination	city	or	an	arrival	city	in	a	certain	date range
+db.bookings.find(
+	[
+		{
+			{$or: [{originAirportCode}, {destAirportCode}]},
+			{$project {"date" {$and: [{$gt: 0, $lt: 6}]}}},
+			'$gte': new Timestamp(new Date(2017, 4, 18), 0),
+			'$lte': new Timestamp(new Date(2017, 4, 18), 0)
+		}
+	]
+)
+
+//db.database.collection.find([{$max : {$avg: {$group: [seats, bookingID] {$eq : open {$divide: [seats, openSeats] {$mul: [percentage, 100]}}}}}}])
+3. What	city has	the	highest	demand seats/openSeats --> resMade/seats
+db.reservations.aggregate(
+	[
+		{
+			_id: ,
+			{$group: reservationsMade, seats},
+			{$avg: {$divide: [reservationsMade, seats]}},
+			{$mul: [100]},
+			{$sort: {"$max"}},
+			{$push: {"city" : city}}
+		}
+	]
+)
+
+4. What	city has	the	lowest	demand seats/openSeats --> resMade/seats
+db.reservations.aggregate(
+	[
+		{
+			_id: ,
+			{$group: [reservationsMade, seats]},
+			{$avg: {$divide: [reservationsMade, seats]}},
+			{$mul: [100]},
+			{$sort: {"$min"}},
+			{$push: {"city" : city}}
+		}
+	]
+)
+5. What	destination	city	has	the	most	available	inbound	seats	in	a	given	date	range.
+db.database.collection.find({destAirportCode : "SWA" , {seats : {"$eq" : openSeats}, {"$divide": [seats, openSeats]}, {"$orderby", {demand : 1}}}}})
+db.flights.aggregate(
+	[
+		{
+			_id: ,
+			destAirportCode: ,
+			{$group: [seats, openSeats]},
+			{
+				$orderby: openSeats,
+				{
+					{$sort: {openSeats : -1}},
+					'$gte': new Timestamp(new Date(2017, 4, 18), 0),
+					'$lte': new Timestamp(new Date(2017, 4, 18), 0)
+				}
+				{$push: {"city" : city}}
+				//{ _id: 1, status: "a", lastModified: ISODate("2017-04-18T11:10:18.965Z") }
+			}
+		}
+	]
+
+)
